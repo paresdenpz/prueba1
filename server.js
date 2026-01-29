@@ -35,8 +35,62 @@ app.get('/api/stores', async (req, res) => {
     res.status(500).json({
       error: "Error al obtener las tiendas",
       details: error.message,
-      code: error.code
     });
+  }
+});
+
+app.get('/api/returns', async (req, res) => {
+  try {
+    const returns = await prisma.return.findMany({
+      include: {
+        Store: true,
+        User: true,
+        ReturnItem: {
+          include: {
+            Product: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(returns);
+  } catch (error) {
+    console.error("GET Returns Error:", error);
+    res.status(500).json({ error: "Error al obtener devoluciones" });
+  }
+});
+
+app.post('/api/returns', async (req, res) => {
+  try {
+    const { originalSaleId, storeId, userId, totalRefund, reason, notes, paymentMethod, items } = req.body;
+
+    const result = await prisma.$transaction(async (tx) => {
+      return await tx.return.create({
+        data: {
+          originalSaleId: parseInt(originalSaleId),
+          storeId: parseInt(storeId),
+          userId: parseInt(userId),
+          totalRefund: parseFloat(totalRefund),
+          reason,
+          notes,
+          paymentMethod: paymentMethod || "CASH",
+          ReturnItem: {
+            create: (items || []).map(item => ({
+              productId: parseInt(item.productId),
+              quantity: parseInt(item.quantity),
+              unitPrice: parseFloat(item.unitPrice),
+              total: parseFloat(item.total),
+              serials: item.serials || []
+            }))
+          }
+        }
+      });
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("POST Returns Error:", error);
+    res.status(500).json({ error: "Error al crear la devolución", details: error.message });
   }
 });
 

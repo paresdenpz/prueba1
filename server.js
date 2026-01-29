@@ -20,6 +20,16 @@ app.get('/api/test', (req, res) => {
   res.json({ message: "Conexión exitosa" });
 });
 
+app.get('/api/stores', async (req, res) => {
+  try {
+    const stores = await prisma.store.findMany();
+    res.json(stores);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al obtener las tiendas" });
+  }
+});
+
 // Capturar todas las demás rutas y servir el index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

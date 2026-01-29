@@ -25,8 +25,12 @@ app.get('/api/stores', async (req, res) => {
     const stores = await prisma.store.findMany();
     res.json(stores);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al obtener las tiendas" });
+    console.error("DEBUG ERROR:", error);
+    res.status(500).json({
+      error: "Error al obtener las tiendas",
+      details: error.message,
+      code: error.code
+    });
   }
 });
 

@@ -19,4 +19,6 @@ model Store {
   defaultMinStock Int?
   alertEmail      String?
   ticketHeader    String?
+
+  @@map("Store")
 }
